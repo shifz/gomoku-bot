@@ -44,6 +44,7 @@ int get_count_index(int count, int block, bool broken){
         return -1;
     }
 }
+
 int evaluate_horizontally(const vector<vector<int> >& board, bool one){
     int counts[9]={0};
     for (int i=0;i<BOARD_WIDTH;i++){
@@ -398,6 +399,31 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
         }
     }
     return 0;
+}
+
+int get_board_score(const vector<vector<int> >& board, bool one){
+    return evaluate_horizontally(board, one) + evaluate_vertically(board, one) + evaluate_diagnally(board, one);
+}
+
+struct MoveComparator {
+    MoveComparator(const vector<vector<int> >& board, bool one){
+        this->board = board;
+        this->one = one;
+    }
+    bool operator ()(pair<int,int> move_1, pair<int,int> move_2){
+        vector<vector<int> > board_1 = board;
+        vector<vector<int> > board_2 = board;
+        board_1[move_1.first][move_1.second] = (one ? 1 : 0);
+        board_2[move_2.first][move_2.second] = (one ? 1 : 0);
+        return get_board_score(board_1, one) > get_board_score(board_2, one);
+    }
+    vector<vector<int> > board;
+    bool one;
+};
+
+
+void sort_moves(const vector<vector<int> >& board, vector<pair<int,int> >& moves, bool one) {
+    sort(moves.begin(), move.end(), MoveComparator(board, one));
 }
 
 void print_board(const vector<vector<int> >& board){
