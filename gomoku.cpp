@@ -52,59 +52,27 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
         // used for broken threes and broken fours. for example OXX_XX will have 
         // prev_count = 2 and prev_block = 1 when we reached the space in the middle.
         int count=0;
-        int prev_count=0; 
-        int prev_blocks=-1;
         int blocks=2;
         int index = -1;
-        bool used = false;
         for (int j=0;j<BOARD_WIDTH;j++){
             if (board[i][j] == (one ? 1 : 0)){
                 count++;
             }
             else if (board[i][j] == -1){
-                if (prev_count > 0 && count==0 && !used){
-                    index = get_count_index(prev_count, prev_blocks, false);
-                    prev_count = 0;
-                    prev_blocks = -1;
-                }
-                else if (count > 0){
+                if (count > 0){
                     blocks--;
-                    if (prev_count > 0){
-                        assert(blocks + prev_blocks<=1);
-                        index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                        prev_count=count;
-                        prev_blocks=blocks;
-                        used=true;
-                    }
-                    else{
-                        prev_count = count;
-                        prev_blocks = blocks;
-                    }
+                    index = get_count_index(count, blocks,false);
                     count = 0;
                 }
                 blocks = 1;
             }
             else if (count > 0){
-                if (prev_count > 0){
-                    assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                    index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                }
-                else{
-                    index = get_count_index(count, blocks, false);
-                }
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
+                index = get_count_index(count, blocks,false);
                 count = 0;
                 blocks = 2;
             }
             else{
                 blocks = 2;
-                if (prev_count>0 && !used)
-                    index = get_count_index(prev_count, prev_blocks, false);
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
             }
             if (index >= 0){
                 counts[index]++;
@@ -112,27 +80,16 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
             }
         }
         if (count > 0){
-            if (prev_count > 0){
-                assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-            }
-            else{
-                index = get_count_index(count, blocks, false);
-            }
+            index = get_count_index(count, blocks,false);
             if (index >= 0){
                 counts[index]++;
-            }
-        }
-        else{
-            if (prev_count>0 && !used)
-                index = get_count_index(prev_count, prev_blocks, false);
-            if (index >= 0){
-                counts[index]++;
+                index = -1;
             }
         }
     }
     int score=0;
     for (int i=0;i<9;i++){
+        cout<<counts[i]<<',';
         score+=W[i]*counts[i];
     }
     return score;
@@ -153,78 +110,39 @@ int evaluate_vertically(const vector<vector<int> >& board, bool one){
     for (size_t j = 0; j < BOARD_WIDTH; j++){
         // used for broken threes and broken fours. for example OXX_XX will have
         // prev_count = 2 and prev_block = 1 when we reached the space in the middle.
-        int consecutive = 0;
-        int prev_consecutive = 0;
-        int prev_blocks = -1;
-        int blocks = 2;
+        int count=0;
+        int blocks=2;
         int index = -1;
-        bool used=false;
-        for (size_t i = 0; i < BOARD_WIDTH; i++){
+        for (int i=0;i<BOARD_WIDTH;i++){
             if (board[i][j] == (one ? 1 : 0)){
-                consecutive++;
-            } else if (board[i][j] == -1){
-                // empty cell
-                if (prev_consecutive > 0 && consecutive == 0 && !used){
-                    index = get_count_index(prev_consecutive, prev_blocks, false);
-                } else if (consecutive > 0){
+                count++;
+            }
+            else if (board[i][j] == -1){
+                if (count > 0){
                     blocks--;
-                    if (prev_consecutive > 0){
-                        assert(prev_blocks + blocks <= 1);
-                        index = get_count_index(consecutive + prev_consecutive, blocks + prev_blocks, true);
-                        prev_consecutive = consecutive;
-                        prev_blocks = blocks;
-                        used=true;
-                    } else {
-                        prev_consecutive = consecutive;
-                        prev_blocks = blocks;
-                    }
-                    consecutive = 0;
+                    index = get_count_index(count, blocks,false);
+                    count = 0;
                 }
                 blocks = 1;
-            } else if (consecutive > 0){
-                // mark of the other color
-                if (prev_consecutive > 0){
-                    assert(blocks + prev_blocks <= 2 && blocks + prev_blocks >= 1);
-                    index = get_count_index(consecutive + prev_consecutive, blocks + prev_blocks, true);
-                } else {
-                    index = get_count_index(consecutive, blocks, false);
-                }
-                prev_consecutive = 0;
-                prev_blocks = -1;
-                used=false;
-                consecutive = 0;
-                blocks = 2;
-            } else {
-                // consecutive == 0, mark of the other color
-                if (prev_consecutive > 0 && !used){
-                    index = get_count_index(prev_consecutive, prev_blocks, false);
-                }
-                prev_consecutive = 0;
-                prev_blocks = -1;
-                used=false;
             }
-            if (index >= 0) {
-                counts[index] ++;
+            else if (count > 0){
+                index = get_count_index(count, blocks,false);
+                count = 0;
+                blocks = 2;
+            }
+            else{
+                blocks = 2;
+            }
+            if (index >= 0){
+                counts[index]++;
                 index = -1;
             }
         }
-        if (consecutive > 0){
-            if (prev_consecutive > 0){
-                assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                index = get_count_index(consecutive + prev_consecutive, blocks + prev_blocks, true);
-            }
-            else{
-                index = get_count_index(consecutive, blocks, false);
-            }
+        if (count > 0){
+            index = get_count_index(count, blocks,false);
             if (index >= 0){
                 counts[index]++;
-            }
-        }
-        else{
-            if (prev_consecutive>0 && !used)
-                index = get_count_index(prev_consecutive, prev_blocks, false);
-            if (index >= 0){
-                counts[index]++;
+                index = -1;
             }
         }
     }
@@ -241,62 +159,28 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
         int start = max(0, k - BOARD_WIDTH + 1);
         int end = min(BOARD_WIDTH - 1, k);
         int count=0;
-        int prev_count=0; 
-        int prev_blocks=-1;
         int blocks=2;
         int index = -1;
-        bool used=false;
-        for (int i = start; i <= end; i++){
-            int j = k - i;
+        for (int i=start;i<=end;i++){
+            int j=k-i;
             if (board[i][j] == (one ? 1 : 0)){
                 count++;
             }
             else if (board[i][j] == -1){
-                if (prev_count > 0 && count==0 && !used){
-                    index = get_count_index(prev_count, prev_blocks, false);
-                    prev_count = 0;
-                    prev_blocks = -1;
-                }
-                else if (count > 0){
+                if (count > 0){
                     blocks--;
-                    if (prev_count > 0){
-                        assert(blocks + prev_blocks<=1);
-                        index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                        // prev_count=0;
-                        // prev_blocks=-1;
-                        prev_count=count;
-                        prev_blocks=blocks;
-                        used=true;
-                    }
-                    else{
-                        prev_count = count;
-                        prev_blocks = blocks;
-                    }
+                    index = get_count_index(count, blocks,false);
                     count = 0;
                 }
                 blocks = 1;
             }
             else if (count > 0){
-                if (prev_count > 0){
-                    assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                    index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                }
-                else{
-                    index = get_count_index(count, blocks, false);
-                }
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
+                index = get_count_index(count, blocks,false);
                 count = 0;
                 blocks = 2;
             }
             else{
                 blocks = 2;
-                if (prev_count>0 && !used)
-                    index = get_count_index(prev_count, prev_blocks, false);
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
             }
             if (index >= 0){
                 counts[index]++;
@@ -304,22 +188,10 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
             }
         }
         if (count > 0){
-            if (prev_count > 0){
-                assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-            }
-            else{
-                index = get_count_index(count, blocks, false);
-            }
+            index = get_count_index(count, blocks,false);
             if (index >= 0){
                 counts[index]++;
-            }
-        }
-        else{
-            if (prev_count>0 && !used)
-                index = get_count_index(prev_count, prev_blocks, false);
-            if (index >= 0){
-                counts[index]++;
+                index = -1;
             }
         }
     }
@@ -327,60 +199,28 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
         int start = max(0, k);
         int end = min(BOARD_WIDTH + k - 1, BOARD_WIDTH - 1);
         int count=0;
-        int prev_count=0; 
-        int prev_blocks=-1;
         int blocks=2;
         int index = -1;
-        bool used=false;
-        for (int i = start; i <= end; i++){
-            int j = i - k;
+        for (int i=start;i<=end;i++){
+            int j=i-k;
             if (board[i][j] == (one ? 1 : 0)){
                 count++;
             }
             else if (board[i][j] == -1){
-                if (prev_count > 0 && count==0 && !used){
-                    index = get_count_index(prev_count, prev_blocks, false);
-                    prev_count = 0;
-                    prev_blocks = -1;
-                }
-                else if (count > 0){
+                if (count > 0){
                     blocks--;
-                    if (prev_count > 0){
-                        assert(blocks + prev_blocks<=1);
-                        index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                        prev_count=count;
-                        prev_blocks=blocks;
-                        used=true;
-                    }
-                    else{
-                        prev_count = count;
-                        prev_blocks = blocks;
-                    }
+                    index = get_count_index(count, blocks,false);
                     count = 0;
                 }
                 blocks = 1;
             }
             else if (count > 0){
-                if (prev_count > 0){
-                    assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                    index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-                }
-                else{
-                    index = get_count_index(count, blocks, false);
-                }
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
+                index = get_count_index(count, blocks,false);
                 count = 0;
                 blocks = 2;
             }
             else{
                 blocks = 2;
-                if (prev_count>0 && !used)
-                    index = get_count_index(prev_count, prev_blocks, false);
-                prev_count = 0;
-                prev_blocks = -1;
-                used=false;
             }
             if (index >= 0){
                 counts[index]++;
@@ -388,22 +228,10 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
             }
         }
         if (count > 0){
-            if (prev_count > 0){
-                assert(blocks + prev_blocks<=2 && blocks + prev_blocks>=1);
-                index = get_count_index(count + prev_count, blocks + prev_blocks, true);
-            }
-            else{
-                index = get_count_index(count, blocks, false);
-            }
+            index = get_count_index(count, blocks,false);
             if (index >= 0){
                 counts[index]++;
-            }
-        }
-        else{
-            if (prev_count>0 && !used)
-                index = get_count_index(prev_count, prev_blocks, false);
-            if (index >= 0){
-                counts[index]++;
+                index = -1;
             }
         }
     }
@@ -462,20 +290,14 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
             }
         }
     }
-    for (int i=0;i<moves[0].size();i++){
-        cout<<'('<<moves[0][i].first<<", "<<moves[0][i].second<<") ";
-    }
-    for (int i=0;i<moves[1].size();i++){
-        cout<<'('<<moves[1][i].first<<", "<<moves[1][i].second<<") ";
-    }
 }
 int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
-    // vector<int> test_column = {-1,1,1,-1,0,-1,0,1,-1,1,1,-1,1,1,0,-1,1,1,1};
-    // for (size_t i = 0; i < BOARD_WIDTH; i++){
-    //     board[0][18-i] = test_column[i];
-    // }
-    // cout << evaluate_horizontally(board,true);
+    vector<int> test_column = {-1,1,1,-1,0,-1,0,1,-1,1,1,1,1,1,0,-1,1,1,1};
+    for (size_t i = 0; i < BOARD_WIDTH; i++){
+        board[18-i][i] = test_column[i];
+    }
+    cout << evaluate_diagnally(board,true)<<endl;
     board[10][10]=1;
     board[10][11]=0;
     vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
