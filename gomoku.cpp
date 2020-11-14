@@ -419,7 +419,7 @@ void print_board(const vector<vector<int> >& board){
     }
 }
 
-void get_moves(const vector<vector<int> >& board, )
+// void get_moves(const vector<vector<int> >& board, )
 int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
     vector<int> test_column = {-1,1,1,-1,0,-1,0,1,-1,1,1,-1,1,1,0,-1,1,1,1};
