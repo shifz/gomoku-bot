@@ -5,12 +5,13 @@
 #include <cstdint>
 #include <cassert>
 #include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
 
 int BOARD_WIDTH=19;
 int W[9]={10000000,1000000,300,10,200,10,150,5,1};
 int get_count_index(int count, int block, bool broken){
-    if (count == 5){
+    if (count >= 5){
         return 0;
     }
     else if (count == 4){
@@ -89,7 +90,6 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
     }
     int score=0;
     for (int i=0;i<9;i++){
-        cout<<counts[i]<<',';
         score+=W[i]*counts[i];
     }
     return score;
@@ -242,7 +242,7 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
     return score;
 }
 
-int get_board_score(const vector<vector<int> >& board, bool one){
+int get_board_score(vector<vector<int> >& board, bool one){
     return evaluate_horizontally(board, one) + evaluate_vertically(board, one) + evaluate_diagnally(board, one);
 }
 
@@ -260,7 +260,6 @@ void sort_moves(vector<vector<int> >& board, vector<pair<int,int> >& moves, bool
         // int board_score = get_board_score(tmp_board, one);
         int board_score = get_board_score(board, one);
         move_with_score.push_back(make_pair(m, board_score));
-        cout << m.first << " "<< m.second <<" " <<board_score <<endl;
         // tmp_board[m.first][m.second] = -1;
         board[m.first][m.second]=-1;
     }
@@ -319,54 +318,110 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
         }
     }
 }
-int main(){
-    vector<vector<int> > board(19,vector<int>(19,-1));
-    vector<int> test_column = {-1,1,1,-1,0,-1,0,1,-1,1,1,1,1,1,0,-1,1,1,1};
-    for (size_t i = 0; i < BOARD_WIDTH; i++){
-        board[18-i][i] = test_column[i];
+
+int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta){
+    if (depth == 0){
+        return get_board_score(board,true)-get_board_score(board,false);
     }
-    cout << evaluate_diagnally(board,true)<<endl;
-    board[10][10]=1;
-    board[10][11]=0;
+    if (maxplayer){
+        int value=INT_MIN;
+        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        get_moves(board,moves);
+        for (int i=0;i<moves[0].size();i++){
+            board[moves[0][i].first][moves[0][i].second]=1;
+            value=max(minimax(board,depth-1,false,0,0),value);
+            board[moves[0][i].first][moves[0][i].second]=-1;
+            alpha = max(alpha,value);
+            if (alpha>=beta){
+                break;
+            }
+        }
+        return value;
+    }
+    else{
+        int value=INT_MAX;
+        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        get_moves(board,moves);
+        for (int i=0;i<moves[0].size();i++){
+            board[moves[0][i].first][moves[0][i].second]=0;
+            value=min(minimax(board,depth-1,true,0,0),value);
+            board[moves[0][i].first][moves[0][i].second]=-1;
+            beta = min(beta,value);
+            if (alpha>=beta){
+                break;
+            }
+        }
+        return value;
+    }
+}
+pair<int,int> search_next_move(vector<vector<int> >& board){
     vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
     get_moves(board,moves);
-    sort_moves(board, moves[0], true);
-
-    cout<<"sorted: "<<endl;
-    for (auto i : moves[0]){
-        cout<<i.first<<" "<<i.second<<endl;
+    int max_value=INT_MIN;
+    pair<int,int> best_move;
+    for (int i=0;i<moves[0].size();i++){
+        board[moves[0][i].first][moves[0][i].second]=1;
+        int value=minimax(board,3,false,INT_MIN,INT_MAX);
+        if (value>max_value){
+            max_value=value;
+            best_move=moves[0][i];
+        }
+        board[moves[0][i].first][moves[0][i].second]=-1;
     }
+    return best_move;
+}
+int main(){
+    vector<vector<int> > board(19,vector<int>(19,-1));
+    // vector<int> test_column = {-1,-1,-1,-1,-1,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+    // for (size_t i = 0; i < BOARD_WIDTH; i++){
+    //     board[0][i] = test_column[i];
+    // }
+    // cout << evaluate_diagnally(board,true)<<endl;
+    // board[10][10]=1;
+    // board[10][11]=0;
+    // vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+    // get_moves(board,moves);
+    // sort_moves(board, moves[0], true);
+
+    // cout<<"sorted: "<<endl;
+    // for (auto i : moves[0]){
+    //     cout<<i.first<<" "<<i.second<<endl;
+    // }
+    // pair<int,int> p=search_next_move(board);
+    // cout<<p.first<<' '<<p.second<<endl;
 
 //    vector<uint32_t> board(BOARD_WIDTH,0);
 //    vector<uint32_t> occupied(BOARD_WIDTH,0);
 //    board[0]=0b0000000000000000000;
 //    occupied[0]=0b1101010101010101010;
 //    cout<<evaluate_horizontally(board,occupied,false);
-//    while(true){
-//        string cmd;
-//        cout<<"> ";
-//        getline(cin,cmd);
-//        if (cmd=="print"){
-//            print_board(board,occupied);
-//        }
-//        else if (cmd=="end"){
-//            break;
-//        }
-//        else{
-//            stringstream ss;
-//            ss.str(cmd);
-//            int x;
-//            int y;
-//            ss>>x>>y;
-//            if ((occupied[x]<<y)%2==1){
-//                cout<<"The spot is taken"<<endl;
-//            }
-//            else{
-//                occupied[x]+=(1<<y);
-//
-//            }
-//        }
-//
-//    }
+    board[10][10]=1;
+    while(true){
+        string cmd;
+        cout<<"> ";
+        getline(cin,cmd);
+        if (cmd=="print"){
+            print_board(board);
+        }
+        else if (cmd=="end"){
+            break;
+        }
+        else{
+            stringstream ss;
+            ss.str(cmd);
+            int x;
+            int y;
+            ss>>x>>y;
+            if (board[x][y]!=-1){
+                cout<<"The spot is taken"<<endl;
+            }
+            else{
+                board[x][y]=0;
+                pair<int,int> p=search_next_move(board);
+                cout<<p.first<<' '<<p.second<<endl;
+                board[p.first][p.second]=1;
+            }
+        }
+    }
     return 0;
 }
