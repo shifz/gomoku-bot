@@ -418,25 +418,25 @@ int get_board_score(const vector<vector<int> >& board, bool one){
     return evaluate_horizontally(board, one) + evaluate_vertically(board, one) + evaluate_diagnally(board, one);
 }
 
-struct MoveComparator {
-    MoveComparator(const vector<vector<int> >& board, bool one){
-        this->board = board;
-        this->one = one;
-    }
-    bool operator ()(pair<int,int> move_1, pair<int,int> move_2){
-        vector<vector<int> > board_1 = board;
-        vector<vector<int> > board_2 = board;
-        board_1[move_1.first][move_1.second] = (one ? 1 : 0);
-        board_2[move_2.first][move_2.second] = (one ? 1 : 0);
-        return get_board_score(board_1, one) > get_board_score(board_2, one);
-    }
-    vector<vector<int> > board;
-    bool one;
-};
-
+bool moveComp(pair<pair<int, int>, int>& move_1, pair<pair<int, int>, int>& move_2){
+    return move_1.second > move_2.second;
+}
 
 void sort_moves(const vector<vector<int> >& board, vector<pair<int,int> >& moves, bool one) {
-    sort(moves.begin(), move.end(), MoveComparator(board, one));
+    vector<pair<pair<int, int>, int> > move_with_score;
+    vector<vector<int> > tmp_board = board;
+    for (auto m : moves){
+        assert(tmp_board[m.first][m.second] == -1);
+        tmp_board[m.first][m.second] = (one ? 1 : 0);
+        int board_score = get_board_score(tmp_board, one);
+        move_with_score.push_back(make_pair(m, board_score));
+        cout << m.first << " "<< m.second <<" " <<board_score <<endl;
+        tmp_board[m.first][m.second] = -1;
+    }
+    sort(move_with_score.begin(), move_with_score.end(), moveComp);
+    for (size_t i = 0; i < moves.size(); i++){
+        moves[i] = move_with_score[i].first;
+    }
 }
 
 void print_board(const vector<vector<int> >& board){
@@ -493,6 +493,7 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
     for (int i=0;i<moves[1].size();i++){
         cout<<'('<<moves[1][i].first<<", "<<moves[1][i].second<<") ";
     }
+    cout<<endl;
 }
 int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
@@ -505,6 +506,12 @@ int main(){
     board[10][11]=0;
     vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
     get_moves(board,moves);
+    sort_moves(board, moves[0], true);
+
+    cout<<"sorted: "<<endl;
+    for (auto i : moves[0]){
+        cout<<i.first<<" "<<i.second<<endl;
+    }
 
 //    vector<uint32_t> board(BOARD_WIDTH,0);
 //    vector<uint32_t> occupied(BOARD_WIDTH,0);
