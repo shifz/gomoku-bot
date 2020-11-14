@@ -9,7 +9,8 @@
 using namespace std;
 
 int BOARD_WIDTH=19;
-int W[9]={10000000,1000000,300,10,200,10,150,5,1};
+int W[11]={10000000,1000000,300,10,200,10,150,5,1,50,40};
+
 int get_count_index(int count, int block, bool broken){
     if (count >= 5){
         return 0;
@@ -19,21 +20,25 @@ int get_count_index(int count, int block, bool broken){
             return 1;
         else if (block == 1)
             return 2;
+        else
+            return 10;
     }
     else if (count == 3){
         if (!broken){
             if (block == 1)
                 return 3;
-            else if (block == 0){
+            else if (block == 0)
                 return 4;
-            }
+            else
+                return 11;
         }
         else{
             if (block == 1)
                 return 5;
-            else if (block == 0){
+            else if (block == 0)
                 return 6;
-            }
+            else
+                return -1;
         }
     }
     else if (count == 2 && block == 0){
@@ -48,7 +53,7 @@ int get_count_index(int count, int block, bool broken){
 }
 // void sort_moves(vector<pair<int,int> >& moves, bool one)
 int evaluate_horizontally(const vector<vector<int> >& board, bool one){
-    int counts[9]={0};
+    int counts[11]={0};
     for (int i=0;i<BOARD_WIDTH;i++){
         // used for broken threes and broken fours. for example OXX_XX will have 
         // prev_count = 2 and prev_block = 1 when we reached the space in the middle.
@@ -89,7 +94,7 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
         }
     }
     int score=0;
-    for (int i=0;i<9;i++){
+    for (int i=0;i<11;i++){
         score+=W[i]*counts[i];
     }
     return score;
@@ -104,9 +109,11 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
 7. broken-three both sides free
 8. two-in-row both sides free
 9. single marks
+10. four-in-row with two sides blocked
+11. three-in-row with two sides blocked
 */
 int evaluate_vertically(const vector<vector<int> >& board, bool one){
-    int counts[9] = {0};
+    int counts[11] = {0};
     for (size_t j = 0; j < BOARD_WIDTH; j++){
         // used for broken threes and broken fours. for example OXX_XX will have
         // prev_count = 2 and prev_block = 1 when we reached the space in the middle.
@@ -147,14 +154,14 @@ int evaluate_vertically(const vector<vector<int> >& board, bool one){
         }
     }
     int score=0;
-    for (int i=0;i<9;i++){
+    for (int i=0;i<11;i++){
         score+=W[i]*counts[i];
     }
     return score;
 }
 
 int evaluate_diagnally(const vector<vector<int> >& board, bool one){
-    int counts[9] = {0};
+    int counts[11] = {0};
     for (int k=0; k <= 2 * (BOARD_WIDTH-1); k++){
         int start = max(0, k - BOARD_WIDTH + 1);
         int end = min(BOARD_WIDTH - 1, k);
@@ -236,7 +243,7 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
         }
     }
     int score=0;
-    for (int i=0;i<9;i++){
+    for (int i=0;i<11;i++){
         score+=W[i]*counts[i];
     }
     return score;
@@ -319,21 +326,28 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
     }
 }
 
-int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta){
+int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta, bool debug){
     if (depth == 0){
-        return get_board_score(board,true)-get_board_score(board,false);
+        int temp=get_board_score(board,true)-get_board_score(board,false);
+        if (debug&&temp<0) cout<<temp<<endl;
+        return temp;
     }
     if (maxplayer){
         int value=INT_MIN;
         vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
         get_moves(board,moves);
-        for (int i=0;i<moves[0].size();i++){
-            board[moves[0][i].first][moves[0][i].second]=1;
-            value=max(minimax(board,depth-1,false,0,0),value);
-            board[moves[0][i].first][moves[0][i].second]=-1;
-            alpha = max(alpha,value);
-            if (alpha>=beta){
-                break;
+        bool cutoff=false;
+        for (int k=0;k<2;k++){
+            if (cutoff) break;
+            for (int i=0;i<moves[k].size();i++){
+                board[moves[k][i].first][moves[k][i].second]=1;
+                value=max(minimax(board,depth-1,false,0,0,debug),value);
+                board[moves[k][i].first][moves[k][i].second]=-1;
+                alpha = max(alpha,value);
+                if (alpha>=beta){
+                    cutoff=true;
+                    break;
+                }
             }
         }
         return value;
@@ -342,13 +356,18 @@ int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, i
         int value=INT_MAX;
         vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
         get_moves(board,moves);
-        for (int i=0;i<moves[0].size();i++){
-            board[moves[0][i].first][moves[0][i].second]=0;
-            value=min(minimax(board,depth-1,true,0,0),value);
-            board[moves[0][i].first][moves[0][i].second]=-1;
-            beta = min(beta,value);
-            if (alpha>=beta){
-                break;
+        bool cutoff=false;
+        for (int k=0;k<2;k++){
+            if (cutoff) break;
+            for (int i=0;i<moves[0].size();i++){
+                board[moves[0][i].first][moves[0][i].second]=0;
+                value=min(minimax(board,depth-1,true,0,0,debug),value);
+                board[moves[0][i].first][moves[0][i].second]=-1;
+                beta = min(beta,value);
+                if (alpha>=beta){
+                    cutoff=true;
+                    break;
+                }
             }
         }
         return value;
@@ -359,14 +378,17 @@ pair<int,int> search_next_move(vector<vector<int> >& board){
     get_moves(board,moves);
     int max_value=INT_MIN;
     pair<int,int> best_move;
-    for (int i=0;i<moves[0].size();i++){
-        board[moves[0][i].first][moves[0][i].second]=1;
-        int value=minimax(board,3,false,INT_MIN,INT_MAX);
-        if (value>max_value){
-            max_value=value;
-            best_move=moves[0][i];
+    for (int k=0;k<moves.size();k++){
+        for (int i=0;i<moves[k].size();i++){
+            board[moves[k][i].first][moves[k][i].second]=1;
+            int value;
+            value=minimax(board,20,false,INT_MIN,INT_MAX,false);
+            if (value>max_value){
+                max_value=value;
+                best_move=moves[k][i];
+            }
+            board[moves[k][i].first][moves[k][i].second]=-1;
         }
-        board[moves[0][i].first][moves[0][i].second]=-1;
     }
     return best_move;
 }
@@ -395,7 +417,13 @@ int main(){
 //    board[0]=0b0000000000000000000;
 //    occupied[0]=0b1101010101010101010;
 //    cout<<evaluate_horizontally(board,occupied,false);
-    board[10][10]=1;
+    // board[10][6]=board[10][11]=board[9][10]=board[11][12]=board[8][9]=0;
+    // board[10][7]=board[10][8]=board[10][9]=board[10][10]=1;
+    // cout<<get_board_score(board,false);
+    // print_board(board);
+    // pair<int,int> p=search_next_move(board);
+    // cout<<p.first<<' '<<p.second<<endl;
+    board[9][9]=1;
     while(true){
         string cmd;
         cout<<"> ";
