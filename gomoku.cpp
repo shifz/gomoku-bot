@@ -242,6 +242,34 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
     return score;
 }
 
+int get_board_score(const vector<vector<int> >& board, bool one){
+    return evaluate_horizontally(board, one) + evaluate_vertically(board, one) + evaluate_diagnally(board, one);
+}
+
+bool moveComp(const pair<pair<int, int>, int>& move_1, const pair<pair<int, int>, int>& move_2){
+    return move_1.second > move_2.second;
+}
+
+void sort_moves(vector<vector<int> >& board, vector<pair<int,int> >& moves, bool one) {
+    vector<pair<pair<int, int>, int> > move_with_score;
+    // vector<vector<int> > tmp_board = board;
+    for (auto m : moves){
+        // assert(tmp_board[m.first][m.second] == -1);
+        board[m.first][m.second]= (one ? 1 : 0);
+        // tmp_board[m.first][m.second] = (one ? 1 : 0);
+        // int board_score = get_board_score(tmp_board, one);
+        int board_score = get_board_score(board, one);
+        move_with_score.push_back(make_pair(m, board_score));
+        cout << m.first << " "<< m.second <<" " <<board_score <<endl;
+        // tmp_board[m.first][m.second] = -1;
+        board[m.first][m.second]=-1;
+    }
+    sort(move_with_score.begin(), move_with_score.end(), moveComp);
+    for (size_t i = 0; i < moves.size(); i++){
+        moves[i] = move_with_score[i].first;
+    }
+}
+
 void print_board(const vector<vector<int> >& board){
     for (int i = 0;i < BOARD_WIDTH; i++){
         for (int j = 0;j < BOARD_WIDTH;j++){
@@ -271,7 +299,7 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
             for (int k = 0; k < 8; k++){
                 int neighbour_i=i+directions_one[k][0];
                 int neighbour_j=j+directions_one[k][1];
-                if (0<=neighbour_i && neighbour_i<BOARD_WIDTH && 
+                if (0<=neighbour_i && neighbour_i<BOARD_WIDTH &&
                     0<=neighbour_j && neighbour_j<BOARD_WIDTH &&
                     board[neighbour_i][neighbour_j] >= 0){
                         moves[0].push_back({i,j});
@@ -281,7 +309,7 @@ void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > 
             for (int k = 0; k < 16; k++){
                 int neighbour_i=i+directions_two[k][0];
                 int neighbour_j=j+directions_two[k][1];
-                if (0<=neighbour_i && neighbour_i<BOARD_WIDTH && 
+                if (0<=neighbour_i && neighbour_i<BOARD_WIDTH &&
                     0<=neighbour_j && neighbour_j<BOARD_WIDTH &&
                     board[neighbour_i][neighbour_j] >= 0){
                         moves[1].push_back({i,j});
@@ -302,7 +330,13 @@ int main(){
     board[10][11]=0;
     vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
     get_moves(board,moves);
-    
+    sort_moves(board, moves[0], true);
+
+    cout<<"sorted: "<<endl;
+    for (auto i : moves[0]){
+        cout<<i.first<<" "<<i.second<<endl;
+    }
+
 //    vector<uint32_t> board(BOARD_WIDTH,0);
 //    vector<uint32_t> occupied(BOARD_WIDTH,0);
 //    board[0]=0b0000000000000000000;
