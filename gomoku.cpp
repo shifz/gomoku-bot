@@ -9,7 +9,32 @@
 using namespace std;
 
 int BOARD_WIDTH=19;
-int W[11]={10000000,1000000,300,10,200,10,150,5,1,50,40};
+/*
+1. five-in-row,
+2. straight-four
+3. four-in-row
+4. three-in-row with one side blocked
+5. three-in-row both sides free
+6. broken-three with one side blocked
+7. broken-three both sides free
+8. two-in-row both sides free
+9. single marks
+10. four-in-row with two sides blocked
+11. three-in-row with two sides blocked
+*/
+int W[11]={
+            10000000,    // 0. five-in-row,
+            1000000,     // 1. straight-four
+            1000,        //3. four-in-row
+            10,     //4. three-in-row with one side blocked
+            800,        //5. three-in-row both sides free
+            10,         //6. broken-three with one side blocked
+            700,        //7. broken-three both sides free
+            10,         //8. two-in-row both sides free
+            0,          //9. single marks
+            20,         //10. four-in-row with two sides blocked
+            10          //11. three-in-row with two sides blocked
+        };
 
 int get_count_index(int count, int block, bool broken){
     if (count >= 5){
@@ -52,6 +77,40 @@ int get_count_index(int count, int block, bool broken){
     }
 }
 // void sort_moves(vector<pair<int,int> >& moves, bool one)
+int check_broken(const vector<vector<int> >& board, int count, int block, pair<int,int> pos, pair<int,int> dir, bool one){
+    int color=(one? 1:0);
+    // if (count==1){
+        int next_pos_x=pos.first+dir.first;
+        int next_pos_y=pos.second+dir.second;
+        int next_count=0;
+        int next_block=1;
+        while(next_pos_x<BOARD_WIDTH && next_pos_x>=0 && 
+            next_pos_y<BOARD_WIDTH && next_pos_y>=0){
+                if ( board[next_pos_x][next_pos_y]==color)
+                    next_count++;
+                else if (board[next_pos_x][next_pos_y]==-1){
+                    next_block=0;
+                    break;
+                }
+                else{
+                    break;
+                }
+                next_pos_x+=dir.first;
+                next_pos_y+=dir.second;
+        }
+        if (next_count==0){
+            return -1;
+        }
+        if (count+next_count>=4){
+            return get_count_index(4,1,false);
+        }
+        else if (count+next_count<=3){
+            return get_count_index(count+next_count,block+next_block,true);
+        }
+        
+        else return -1;
+    // }
+}
 int evaluate_horizontally(const vector<vector<int> >& board, bool one){
     int counts[11]={0};
     for (int i=0;i<BOARD_WIDTH;i++){
@@ -67,7 +126,9 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one){
             else if (board[i][j] == -1){
                 if (count > 0){
                     blocks--;
-                    index = get_count_index(count, blocks,false);
+                    if ((index = check_broken(board,count,blocks,{i,j},{0,1},one))==-1){
+                        index = get_count_index(count, blocks,false);
+                    }
                     count = 0;
                 }
                 blocks = 1;
@@ -127,7 +188,9 @@ int evaluate_vertically(const vector<vector<int> >& board, bool one){
             else if (board[i][j] == -1){
                 if (count > 0){
                     blocks--;
-                    index = get_count_index(count, blocks,false);
+                    if ((index = check_broken(board,count,blocks,{i,j},{1,0},one))==-1){
+                        index = get_count_index(count, blocks,false);
+                    }
                     count = 0;
                 }
                 blocks = 1;
@@ -176,7 +239,9 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
             else if (board[i][j] == -1){
                 if (count > 0){
                     blocks--;
-                    index = get_count_index(count, blocks,false);
+                    if ((index = check_broken(board,count,blocks,{i,j},{1,-1},one))==-1){
+                        index = get_count_index(count, blocks,false);
+                    }
                     count = 0;
                 }
                 blocks = 1;
@@ -216,7 +281,9 @@ int evaluate_diagnally(const vector<vector<int> >& board, bool one){
             else if (board[i][j] == -1){
                 if (count > 0){
                     blocks--;
-                    index = get_count_index(count, blocks,false);
+                    if ((index = check_broken(board,count,blocks,{i,j},{1,1},one))==-1){
+                        index = get_count_index(count, blocks,false);
+                    }
                     count = 0;
                 }
                 blocks = 1;
@@ -382,7 +449,7 @@ pair<int,int> search_next_move(vector<vector<int> >& board){
         for (int i=0;i<moves[k].size();i++){
             board[moves[k][i].first][moves[k][i].second]=1;
             int value;
-            value=minimax(board,20,false,INT_MIN,INT_MAX,false);
+            value=minimax(board,30,false,INT_MIN,INT_MAX,false);
             if (value>max_value){
                 max_value=value;
                 best_move=moves[k][i];
@@ -394,11 +461,11 @@ pair<int,int> search_next_move(vector<vector<int> >& board){
 }
 int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
-    // vector<int> test_column = {-1,-1,-1,-1,-1,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+    // vector<int> test_column = {-1,-1,-1,-1,-1,0,1,1,-1,1,1,-1,-1,-1,-1,-1,-1,-1,-1};
     // for (size_t i = 0; i < BOARD_WIDTH; i++){
     //     board[0][i] = test_column[i];
     // }
-    // cout << evaluate_diagnally(board,true)<<endl;
+    // cout << evaluate_horizontally(board,true)<<endl;
     // board[10][10]=1;
     // board[10][11]=0;
     // vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
@@ -417,9 +484,9 @@ int main(){
 //    board[0]=0b0000000000000000000;
 //    occupied[0]=0b1101010101010101010;
 //    cout<<evaluate_horizontally(board,occupied,false);
-    // board[10][6]=board[10][11]=board[9][10]=board[11][12]=board[8][9]=0;
-    // board[10][7]=board[10][8]=board[10][9]=board[10][10]=1;
-    // cout<<get_board_score(board,false);
+    // board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[8][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
+    // board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
+    // cout<<get_board_score(board,true);
     // print_board(board);
     // pair<int,int> p=search_next_move(board);
     // cout<<p.first<<' '<<p.second<<endl;
