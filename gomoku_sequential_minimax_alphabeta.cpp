@@ -1,0 +1,131 @@
+#include "gomoku_utils.h"
+//#include <bits/stdc++.h>
+using namespace std;
+
+int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta, bool debug){
+    if (depth == 0){
+        int temp=get_board_score(board,true)-get_board_score(board,false);
+        if (debug&&temp<0) cout<<temp<<endl;
+        return temp;
+    }
+    if (maxplayer){
+        int value=INT_MIN;
+        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        get_moves(board,moves);
+        bool cutoff=false;
+        for (int k=0;k<2;k++){
+            if (cutoff) break;
+            for (int i=0;i<moves[k].size();i++){
+                board[moves[k][i].first][moves[k][i].second]=1;
+                value=max(minimax(board,depth-1,false,0,0,debug),value);
+                board[moves[k][i].first][moves[k][i].second]=-1;
+                alpha = max(alpha,value);
+                if (alpha>=beta){
+                    cutoff=true;
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+    else{
+        int value=INT_MAX;
+        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        get_moves(board,moves);
+        bool cutoff=false;
+        for (int k=0;k<2;k++){
+            if (cutoff) break;
+            for (int i=0;i<moves[0].size();i++){
+                board[moves[0][i].first][moves[0][i].second]=0;
+                value=min(minimax(board,depth-1,true,0,0,debug),value);
+                board[moves[0][i].first][moves[0][i].second]=-1;
+                beta = min(beta,value);
+                if (alpha>=beta){
+                    cutoff=true;
+                    break;
+                }
+            }
+        }
+        return value;
+    }
+}
+pair<int,int> search_next_move(vector<vector<int> >& board){
+    vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+    get_moves(board,moves);
+    int max_value=INT_MIN;
+    pair<int,int> best_move;
+    for (int k=0;k<moves.size();k++){
+        for (int i=0;i<moves[k].size();i++){
+            board[moves[k][i].first][moves[k][i].second]=1;
+            int value;
+            value=minimax(board,30,false,INT_MIN,INT_MAX,false);
+            if (value>max_value){
+                max_value=value;
+                best_move=moves[k][i];
+            }
+            board[moves[k][i].first][moves[k][i].second]=-1;
+        }
+    }
+    return best_move;
+}
+int main(){
+    vector<vector<int> > board(19,vector<int>(19,-1));
+    // vector<int> test_column = {-1,-1,-1,-1,-1,0,1,1,-1,1,1,-1,-1,-1,-1,-1,-1,-1,-1};
+    // for (size_t i = 0; i < BOARD_WIDTH; i++){
+    //     board[0][i] = test_column[i];
+    // }
+    // cout << evaluate_horizontally(board,true)<<endl;
+    // board[10][10]=1;
+    // board[10][11]=0;
+    // vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+    // get_moves(board,moves);
+    // sort_moves(board, moves[0], true);
+
+    // cout<<"sorted: "<<endl;
+    // for (auto i : moves[0]){
+    //     cout<<i.first<<" "<<i.second<<endl;
+    // }
+    // pair<int,int> p=search_next_move(board);
+    // cout<<p.first<<' '<<p.second<<endl;
+
+//    vector<uint32_t> board(BOARD_WIDTH,0);
+//    vector<uint32_t> occupied(BOARD_WIDTH,0);
+//    board[0]=0b0000000000000000000;
+//    occupied[0]=0b1101010101010101010;
+//    cout<<evaluate_horizontally(board,occupied,false);
+    // board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[8][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
+    // board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
+    // cout<<get_board_score(board,true);
+    // print_board(board);
+    // pair<int,int> p=search_next_move(board);
+    // cout<<p.first<<' '<<p.second<<endl;
+    board[9][9]=1;
+    while(true){
+        string cmd;
+        cout<<"> ";
+        getline(cin,cmd);
+        if (cmd=="print"){
+            print_board(board);
+        }
+        else if (cmd=="end"){
+            break;
+        }
+        else{
+            stringstream ss;
+            ss.str(cmd);
+            int x;
+            int y;
+            ss>>x>>y;
+            if (board[x][y]!=-1){
+                cout<<"The spot is taken"<<endl;
+            }
+            else{
+                board[x][y]=0;
+                pair<int,int> p=search_next_move(board);
+                cout<<p.first<<' '<<p.second<<endl;
+                board[p.first][p.second]=1;
+            }
+        }
+    }
+    return 0;
+}
