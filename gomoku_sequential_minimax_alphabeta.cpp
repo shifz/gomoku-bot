@@ -1,5 +1,5 @@
 #include "gomoku_utils.h"
-//#include <bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
 int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta, bool debug){
@@ -10,61 +10,49 @@ int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, i
     }
     if (maxplayer){
         int value=INT_MIN;
-        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        vector<pair<int,int> > moves;
         get_moves(board,moves);
-        bool cutoff=false;
-        for (int k=0;k<2;k++){
-            if (cutoff) break;
-            for (int i=0;i<moves[k].size();i++){
-                board[moves[k][i].first][moves[k][i].second]=1;
-                value=max(minimax(board,depth-1,false,0,0,debug),value);
-                board[moves[k][i].first][moves[k][i].second]=-1;
-                alpha = max(alpha,value);
-                if (alpha>=beta){
-                    cutoff=true;
-                    break;
-                }
+        for (int i=0;i<moves.size();i++){
+            board[moves[i].first][moves[i].second]=1;
+            value=max(minimax(board,depth-1,false,0,0,debug),value);
+            board[moves[i].first][moves[i].second]=-1;
+            alpha = max(alpha,value);
+            if (alpha>=beta){
+                break;
             }
         }
         return value;
     }
     else{
         int value=INT_MAX;
-        vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+        vector<pair<int,int> > moves;
         get_moves(board,moves);
-        bool cutoff=false;
-        for (int k=0;k<2;k++){
-            if (cutoff) break;
-            for (int i=0;i<moves[0].size();i++){
-                board[moves[0][i].first][moves[0][i].second]=0;
-                value=min(minimax(board,depth-1,true,0,0,debug),value);
-                board[moves[0][i].first][moves[0][i].second]=-1;
-                beta = min(beta,value);
-                if (alpha>=beta){
-                    cutoff=true;
-                    break;
-                }
+        for (int i=0;i<moves.size();i++){
+            board[moves[i].first][moves[i].second]=0;
+            value=min(minimax(board,depth-1,true,0,0,debug),value);
+            board[moves[i].first][moves[i].second]=-1;
+            beta = min(beta,value);
+            if (alpha>=beta){
+                break;
             }
         }
         return value;
     }
 }
 pair<int,int> search_next_move(vector<vector<int> >& board){
-    vector<vector<pair<int,int> > > moves(2,vector<pair<int,int> >());
+    vector<pair<int,int> > moves;
     get_moves(board,moves);
     int max_value=INT_MIN;
     pair<int,int> best_move;
-    for (int k=0;k<moves.size();k++){
-        for (int i=0;i<moves[k].size();i++){
-            board[moves[k][i].first][moves[k][i].second]=1;
-            int value;
-            value=minimax(board,30,false,INT_MIN,INT_MAX,false);
-            if (value>max_value){
-                max_value=value;
-                best_move=moves[k][i];
-            }
-            board[moves[k][i].first][moves[k][i].second]=-1;
+    for (int i=0;i<moves.size();i++){
+        board[moves[i].first][moves[i].second]=1;
+        int value;
+        value=minimax(board,30,false,INT_MIN,INT_MAX,false);
+        if (value>max_value){
+            max_value=value;
+            best_move=moves[i];
         }
+        board[moves[i].first][moves[i].second]=-1;
     }
     return best_move;
 }
@@ -121,6 +109,7 @@ int main(){
             }
             else{
                 board[x][y]=0;
+                print_board(board);
                 pair<int,int> p=search_next_move(board);
                 cout<<p.first<<' '<<p.second<<endl;
                 board[p.first][p.second]=1;

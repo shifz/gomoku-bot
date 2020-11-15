@@ -25,6 +25,6 @@ int get_board_score(vector<vector<int> >& board, bool one);
 bool moveComp(const pair<pair<int, int>, int>& move_1, const pair<pair<int, int>, int>& move_2);
 void sort_moves(vector<vector<int> >& board, vector<pair<int,int> >& moves, bool one);
 void print_board(const vector<vector<int> >& board);
-void get_moves(const vector<vector<int> >& board, vector<vector<pair<int,int> > >& moves);
+void get_moves(const vector<vector<int> >& board,vector<pair<int,int> >& moves);
 
 #endif //GOMOKU_BOT_GOMOKU_UTILS_H
