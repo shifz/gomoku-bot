@@ -1,10 +1,12 @@
 #include "gomoku_utils.h"
 #include <bits/stdc++.h>
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 
 int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta, bool debug){
     if (depth == 0){
-        int temp=get_board_score(board,true)-get_board_score(board,false);
+        int temp=get_board_score_for_both(board);
         if (debug&&temp<0) cout<<temp<<endl;
         return temp;
     }
@@ -14,7 +16,7 @@ int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, i
         get_moves(board,moves);
         for (int i=0;i<moves.size();i++){
             board[moves[i].first][moves[i].second]=1;
-            value=max(minimax(board,depth-1,false,0,0,debug),value);
+            value=max(minimax(board,depth-1,false,alpha,beta,debug),value);
             board[moves[i].first][moves[i].second]=-1;
             alpha = max(alpha,value);
             if (alpha>=beta){
@@ -29,7 +31,7 @@ int minimax(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, i
         get_moves(board,moves);
         for (int i=0;i<moves.size();i++){
             board[moves[i].first][moves[i].second]=0;
-            value=min(minimax(board,depth-1,true,0,0,debug),value);
+            value=min(minimax(board,depth-1,true,alpha,beta,debug),value);
             board[moves[i].first][moves[i].second]=-1;
             beta = min(beta,value);
             if (alpha>=beta){
@@ -47,7 +49,7 @@ pair<int,int> search_next_move(vector<vector<int> >& board){
     for (int i=0;i<moves.size();i++){
         board[moves[i].first][moves[i].second]=1;
         int value;
-        value=minimax(board,30,false,INT_MIN,INT_MAX,false);
+        value=minimax(board,3,false,INT_MIN,INT_MAX,false);
         if (value>max_value){
             max_value=value;
             best_move=moves[i];
@@ -81,40 +83,43 @@ int main(){
 //    board[0]=0b0000000000000000000;
 //    occupied[0]=0b1101010101010101010;
 //    cout<<evaluate_horizontally(board,occupied,false);
-    // board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[8][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
-    // board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
-    // cout<<get_board_score(board,true);
-    // print_board(board);
-    // pair<int,int> p=search_next_move(board);
-    // cout<<p.first<<' '<<p.second<<endl;
-    board[9][9]=1;
-    while(true){
-        string cmd;
-        cout<<"> ";
-        getline(cin,cmd);
-        if (cmd=="print"){
-            print_board(board);
-        }
-        else if (cmd=="end"){
-            break;
-        }
-        else{
-            stringstream ss;
-            ss.str(cmd);
-            int x;
-            int y;
-            ss>>x>>y;
-            if (board[x][y]!=-1){
-                cout<<"The spot is taken"<<endl;
-            }
-            else{
-                board[x][y]=0;
-                print_board(board);
-                pair<int,int> p=search_next_move(board);
-                cout<<p.first<<' '<<p.second<<endl;
-                board[p.first][p.second]=1;
-            }
-        }
-    }
+    board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[9][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
+    board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
+    cout<<get_board_score(board,true);
+    print_board(board);
+    auto start = high_resolution_clock::now(); 
+    pair<int,int> p=search_next_move(board);
+    auto stop = high_resolution_clock::now(); 
+    cout<<p.first<<' '<<p.second<<endl;
+    cout<<(duration_cast<milliseconds>(stop - start)).count()<<endl;
+    // board[9][9]=1;
+    // while(true){
+    //     string cmd;
+    //     cout<<"> ";
+    //     getline(cin,cmd);
+    //     if (cmd=="print"){
+    //         print_board(board);
+    //     }
+    //     else if (cmd=="end"){
+    //         break;
+    //     }
+    //     else{
+    //         stringstream ss;
+    //         ss.str(cmd);
+    //         int x;
+    //         int y;
+    //         ss>>x>>y;
+    //         if (board[x][y]!=-1){
+    //             cout<<"The spot is taken"<<endl;
+    //         }
+    //         else{
+    //             board[x][y]=0;
+    //             print_board(board);
+    //             pair<int,int> p=search_next_move(board);
+    //             cout<<p.first<<' '<<p.second<<endl;
+    //             board[p.first][p.second]=1;
+    //         }
+    //     }
+    // }
     return 0;
 }
