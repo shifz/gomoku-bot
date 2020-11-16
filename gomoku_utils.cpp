@@ -2,7 +2,7 @@
 // Created by Jiaxin Ye on 11/15/20.
 //
 #include "gomoku_utils.h"
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
 int BOARD_WIDTH=19;
 int W[11]={
         10000000,   //0. five-in-row,
