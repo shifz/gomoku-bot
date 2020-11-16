@@ -3,16 +3,16 @@
 #include <omp.h>
 using namespace std;
 
-int local_minimax(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
+int local_minimax(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int beta){
     vector<pair<int,int>> moves;
-    get_moves(board);
-    if (max){
+    get_moves(board,moves);
+    if (maxplayer){
         int best_score=INT_MIN;
         int score=0;
         for (int i=0;i<moves.size();i++){
             board[moves[i].first][moves[i].second]=1;
             if (depth==0){
-                score=get_board_score(board,true)-get_board_score(baord,false);
+                score=get_board_score(board,true)-get_board_score(board,false);
             }
             else{
                 score=local_minimax(board,false,depth-1,alpha,beta);
@@ -35,13 +35,13 @@ int local_minimax(vector<vector<int> >& board, bool max, int depth, int alpha, i
         for (int i=0;i<moves.size();i++){
             board[moves[i].first][moves[i].second]=0;
             if (depth==0){
-                score=get_board_score(board,true)-get_board_score(baord,false);
+                score=get_board_score(board,true)-get_board_score(board,false);
             }
             else{
                 score=local_minimax(board,true,depth-1,alpha,beta);
             }
             best_score=min(score,best_score);
-            if (score<beta>){
+            if (score<beta){
                 beta=score;
                 if (alpha>beta){
                     board[moves[i].first][moves[i].second]=-1;
@@ -53,14 +53,14 @@ int local_minimax(vector<vector<int> >& board, bool max, int depth, int alpha, i
         return best_score;
     }
 }
-int PVS(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
+int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int beta){
     vector<pair<int,int>> moves;
-    get_moves(board);
+    get_moves(board,moves);
     int global_best_score;
-    if (max){
+    if (maxplayer){
         board[moves[0].first][moves[0].second]=1;
         if (depth==0){
-            global_best_score=get_board_score(board,true)-get_board_score(baord,false);
+            global_best_score=get_board_score(board,true)-get_board_score(board,false);
         }
         else{
             global_best_score=PVS(board,false,depth-1,alpha,beta);
@@ -84,7 +84,7 @@ int PVS(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
                 board[moves[i].first][moves[i].second]=1;
                 int score=0;
                 if (depth==0){
-                    score=get_board_score(board,true)-get_board_score(baord,false);
+                    score=get_board_score(board,true)-get_board_score(board,false);
                 }
                 else{
                     score=local_minimax(board,false,depth-1,alpha,beta);
@@ -104,7 +104,7 @@ int PVS(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
     else{
         board[moves[0].first][moves[0].second]=0;
         if (depth==0){
-            global_best_score=get_board_score(board,true)-get_board_score(baord,false);
+            global_best_score=get_board_score(board,true)-get_board_score(board,false);
         }
         else{
             global_best_score=PVS(board,true,depth-1,alpha,beta);
@@ -128,7 +128,7 @@ int PVS(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
                 board[moves[i].first][moves[i].second]=0;
                 int score=0;
                 if (depth==0){
-                    score=get_board_score(board,true)-get_board_score(baord,false);
+                    score=get_board_score(board,true)-get_board_score(board,false);
                 }
                 else{
                     score=local_minimax(board,true,depth-1,alpha,beta);
@@ -149,7 +149,7 @@ int PVS(vector<vector<int> >& board, bool max, int depth, int alpha, int beta){
 }
 pair<int,int> search_next_move(vector<vector<int> >& board){
     vector<pair<int,int>> moves;
-    get_moves(board);
+    get_moves(board,moves);
     pair<int,int> global_best_move=moves[0];
     board[moves[0].first][moves[0].second]=1;
     int alpha=INT_MIN;
@@ -160,7 +160,7 @@ pair<int,int> search_next_move(vector<vector<int> >& board){
     #pragma omp parallel
     {
         int local_best_score=INT_MIN;
-        int local_best_move=moves[1];
+        pair<int,int> local_best_move=moves[1];
         int local_alpha=alpha;
         int local_beta=beta;
         vector<vector<int> > local_board=board;
