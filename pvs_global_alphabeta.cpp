@@ -2,7 +2,7 @@
 #include <bits/stdc++.h>
 #include <omp.h>
 using namespace std;
-
+bool printed=false;
 int local_minimax(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int beta){
     vector<pair<int,int>> moves;
     get_moves(board,moves);
@@ -67,7 +67,7 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
         else{
             global_best_score=PVS(board,false,depth-1,alpha,beta);
         }
-        if (global_best_score>beta){
+        if (global_best_score>=beta){
             board[moves[0].first][moves[0].second]=-1;
             return beta;
         }
@@ -77,9 +77,6 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
         board[moves[0].first][moves[0].second]=-1;
         #pragma omp parallel
         {
-            int local_best_score=INT_MIN;
-            int local_alpha=alpha;
-            int local_beta=beta;
             vector<vector<int> > local_board=board;
             #pragma omp for schedule(static)
             for (int i=1;i<moves.size();i++){
@@ -91,15 +88,14 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
                 else{
                     score=local_minimax(local_board,false,depth-1,alpha,beta);
                 }
-                if (score>local_best_score){
-                    local_best_score=score;
-                    local_alpha=local_best_score;
+                if (score>global_best_score){
+                    #pragma omp critical
+                    {
+                        global_best_score=score;
+                        alpha=global_best_score;
+                    }
                 }
                 local_board[moves[i].first][moves[i].second]=-1;
-            }
-            #pragma omp critical
-            {
-                global_best_score=max(local_best_score,global_best_score);
             }
         }
     }
@@ -111,7 +107,7 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
         else{
             global_best_score=PVS(board,true,depth-1,alpha,beta);
         }
-        if (global_best_score>beta){
+        if (global_best_score>=beta){
             board[moves[0].first][moves[0].second]=-1;
             return beta;
         }
@@ -121,9 +117,6 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
         board[moves[0].first][moves[0].second]=-1;
         #pragma omp parallel
         {
-            int local_best_score=INT_MAX;
-            int local_alpha=alpha;
-            int local_beta=beta;
             vector<vector<int> > local_board=board;
             #pragma omp for schedule(static)
             for (int i=1;i<moves.size();i++){
@@ -135,15 +128,14 @@ int PVS(vector<vector<int> >& board, bool maxplayer, int depth, int alpha, int b
                 else{
                     score=local_minimax(local_board,true,depth-1,alpha,beta);
                 }
-                if (score<local_best_score){
-                    local_best_score=score;
-                    local_beta=local_best_score;
+                if (score<global_best_score){
+                    #pragma omp critical
+                    {
+                        global_best_score=score;
+                        beta=global_best_score;
+                    }
                 }
                 local_board[moves[i].first][moves[i].second]=-1;
-            }
-            #pragma omp critical
-            {
-                global_best_score=min(local_best_score,global_best_score);
             }
         }
     }
@@ -162,28 +154,20 @@ pair<int,int> search_next_move(vector<vector<int> >& board, int depth){
     board[moves[0].first][moves[0].second]=-1;
     #pragma omp parallel
     {
-        int local_best_score=INT_MIN;
-        pair<int,int> local_best_move=moves[1];
-        int local_alpha=alpha;
-        int local_beta=beta;
         vector<vector<int> > local_board=board;
         #pragma omp for schedule(static)
         for (int i=1;i<moves.size();i++){
             local_board[moves[i].first][moves[i].second]=1;
-            int score=local_minimax(local_board,false,depth-1,local_alpha,local_beta);
-            if (score>local_best_score){
-                local_best_score=score;
-                local_best_move=moves[i];
-                local_alpha=local_best_score;
+            int score=local_minimax(local_board,false,depth-1,alpha,beta);
+            if (score>global_best_score){
+                #pragma omp critical
+                {
+                    global_best_score=score;
+                    global_best_move=moves[i];
+                    alpha=global_best_score;
+                }
             }
             local_board[moves[i].first][moves[i].second]=-1;
-        }
-        #pragma omp critical
-        {
-            if (local_best_score>global_best_score){
-                global_best_score=local_best_score;
-                global_best_move=local_best_move;
-            }
         }
     }
     return global_best_move;
@@ -192,7 +176,6 @@ int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
     board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[9][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
     board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
-    print_board(board);
     double start=omp_get_wtime();
     pair<int,int> move=search_next_move(board,3);
     double end=omp_get_wtime();

@@ -22,6 +22,7 @@ int evaluate_horizontally(const vector<vector<int> >& board, bool one);
 int evaluate_vertically(const vector<vector<int> >& board, bool one);
 int evaluate_diagnally(const vector<vector<int> >& board, bool one);
 int get_board_score(vector<vector<int> >& board, bool one);
+int get_board_score_for_both(vector<vector<int> >& board);
 bool moveComp(const pair<pair<int, int>, int>& move_1, const pair<pair<int, int>, int>& move_2);
 void sort_moves(vector<vector<int> >& board, vector<pair<int,int> >& moves, bool one);
 void print_board(const vector<vector<int> >& board);

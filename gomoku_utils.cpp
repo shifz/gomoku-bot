@@ -2,7 +2,7 @@
 // Created by Jiaxin Ye on 11/15/20.
 //
 #include "gomoku_utils.h"
-
+#include <bits/stdc++.h>
 int BOARD_WIDTH=19;
 int W[11]={
         10000000,   //0. five-in-row,
@@ -292,6 +292,19 @@ int get_board_score(vector<vector<int> >& board, bool one){
     return evaluate_horizontally(board, one) + evaluate_vertically(board, one) + evaluate_diagnally(board, one);
 }
 
+int get_board_score_for_both(vector<vector<int> >& board){
+    int black_score=get_board_score(board,true);
+    int white_score=get_board_score(board,false);
+    if (black_score >= W[0]){
+        return INT_MAX;
+    }
+    else if (white_score >= W[0]){
+        return INT_MIN;
+    }
+    else{
+        return black_score-white_score;
+    }
+}
 bool moveComp(const pair<pair<int, int>, int>& move_1, const pair<pair<int, int>, int>& move_2){
     return move_1.second > move_2.second;
 }
