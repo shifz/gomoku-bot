@@ -2,7 +2,6 @@
 // Created by Jiaxin Ye on 11/15/20.
 //
 #include "gomoku_utils.h"
-//#include <bits/stdc++.h>
 int BOARD_WIDTH=19;
 int W[11]={
         10000000,   //0. five-in-row,
@@ -354,6 +353,7 @@ void get_moves(const vector<vector<int> >& board, vector<pair<int,int> >& moves)
     for (int i = 0; i < BOARD_WIDTH; i++){
         for (int j = 0; j < BOARD_WIDTH; j++){
             if (board[i][j] >= 0) continue;
+            bool added=false;
             for (int k = 0; k < 8; k++){
                 int neighbour_i=i+directions_one[k][0];
                 int neighbour_j=j+directions_one[k][1];
@@ -361,22 +361,20 @@ void get_moves(const vector<vector<int> >& board, vector<pair<int,int> >& moves)
                     0<=neighbour_j && neighbour_j<BOARD_WIDTH &&
                     board[neighbour_i][neighbour_j] >= 0){
                     moves.push_back({i,j});
+                    added=true;
                     break;
                 }
             }
-        }
-    }
-    for (int i = 0; i < BOARD_WIDTH; i++){
-        for (int j = 0; j < BOARD_WIDTH; j++){
-            if (board[i][j] >= 0) continue;
-            for (int k = 0; k < 16; k++){
-                int neighbour_i=i+directions_two[k][0];
-                int neighbour_j=j+directions_two[k][1];
-                if (0<=neighbour_i && neighbour_i<BOARD_WIDTH &&
-                    0<=neighbour_j && neighbour_j<BOARD_WIDTH &&
-                    board[neighbour_i][neighbour_j] >= 0){
-                    moves.push_back({i,j});
-                    break;
+            if (!added){
+                for (int k = 0; k < 16; k++){
+                    int neighbour_i=i+directions_two[k][0];
+                    int neighbour_j=j+directions_two[k][1];
+                    if (0<=neighbour_i && neighbour_i<BOARD_WIDTH &&
+                        0<=neighbour_j && neighbour_j<BOARD_WIDTH &&
+                        board[neighbour_i][neighbour_j] >= 0){
+                        moves.push_back({i,j});
+                        break;
+                    }
                 }
             }
         }

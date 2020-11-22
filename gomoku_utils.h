@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cassert>
 #include <algorithm>
+#include <bits/stdc++.h>
 using namespace std;
 
 extern int BOARD_WIDTH;

@@ -8,7 +8,7 @@ using namespace std;
 
 int evaluate_states(vector<vector<int> >& board, int depth, bool maxplayer, int alpha, int beta, bool debug){
     if (depth == 0){
-        int temp = get_board_score(board, true) - get_board_score(board, false);
+        int temp = get_board_score_for_both(board);
         if (debug && temp < 0) cout << temp << endl;
         return temp;
     }
@@ -62,6 +62,7 @@ pair<int, int> minimax_parallel_distributed(vector<vector<int> >& board, int dep
             int value = 0;
             local_board[moves[i].first][moves[i].second] = 1;
             value = evaluate_states(local_board, depth - 1, false, local_alpha, local_beta, debug);
+            cout<<value<<' '<<"ab: "<<local_alpha<<' '<<local_beta<<endl;
             if (value > local_best_value){
                 local_best_value = value;
                 local_best_move = moves[i];
@@ -79,6 +80,7 @@ pair<int, int> minimax_parallel_distributed(vector<vector<int> >& board, int dep
         }
 
     }
+    cout<<global_best_value<<endl;
     return global_best_move;
 }
 
@@ -88,10 +90,12 @@ pair<int,int> search_next_move(vector<vector<int> >& board, int depth){
 
 int main(){
     vector<vector<int> > board(19,vector<int>(19,-1));
-    board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[9][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
-    board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
+    // board[6][10]=board[7][11]=board[8][9]=board[9][6]=board[9][10]=board[10][7]=board[10][8]=board[10][10]=board[11][5]=0;
+    // board[7][9]=board[8][8]=board[8][10]=board[9][7]=board[9][8]=board[9][9]=board[9][11]=board[10][6]=board[11][7]=1;
+    board[8][8]=board[8][9]=board[9][9]=board[10][8]=board[10][9]=board[10][10]=board[11][8]=board[12][7]=board[12][8]=board[12][9]=1;
+    board[9][7]=board[9][8]=board[9][10]=board[10][7]=board[10][11]=board[11][7]=board[11][9]=board[11][11]=board[12][6]=board[13][8]=0;
     double start=omp_get_wtime();
-    pair<int,int> move=search_next_move(board,10);
+    pair<int,int> move=search_next_move(board,5);
     double end=omp_get_wtime();
     cout<<move.first<<' '<<move.second<<endl;
     cout<<end-start<<endl;
